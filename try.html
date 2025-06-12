@@ -1,105 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Simple Calculator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SA University Timetable</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background: linear-gradient(135deg, green, yellow, blue, grey, red);
+      color: #333;
+      margin: 20px;
     }
-    .calculator {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    h1 {
+      text-align: center;
+      color: white;
+      text-shadow: 1px 1px 2px black;
     }
-    input[type="text"] {
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+    table {
+      border-collapse: collapse;
       width: 100%;
-      padding: 15px;
-      font-size: 1.5em;
-      margin-bottom: 10px;
-      text-align: right;
+      margin-bottom: 20px;
+      background: white;
     }
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 60px);
-      gap: 10px;
+    th, td {
+      border: 1px solid #aaa;
+      text-align: center;
+      padding: 10px;
+      min-width: 100px;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #222;
+      color: white;
+    }
+    .module {
+      cursor: pointer;
+      padding: 5px;
+      margin: 2px;
+      border-radius: 4px;
+      color: white;
+      user-select: none;
+    }
+    #modulesList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .timetable-cell {
+      position: relative;
+      height: 70px;
+    }
+    .module-block {
+      position: absolute;
+      top: 2px; left: 2px; right: 2px; bottom: 2px;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    label {
+      margin-right: 10px;
+    }
+    input[type="text"], input[type="number"], select {
+      padding: 5px;
+      margin-right: 10px;
     }
     button {
-      padding: 15px;
-      font-size: 1.2em;
-      border: none;
-      background-color: #eee;
-      border-radius: 5px;
+      padding: 6px 12px;
       cursor: pointer;
-    }
-    button.operator {
-      background-color: #f9a825;
+      background-color: #222;
       color: white;
+      border: none;
+      border-radius: 4px;
     }
-    button.equal {
-      background-color: #43a047;
-      color: white;
-      grid-column: span 2;
-    }
-    button.clear {
-      background-color: #e53935;
-      color: white;
-      grid-column: span 2;
+    button:hover {
+      background-color: #555;
     }
   </style>
 </head>
 <body>
-  <div class="calculator">
-    <input type="text" id="display" disabled>
-    <div class="buttons">
-      <button onclick="press('7')">7</button>
-      <button onclick="press('8')">8</button>
-      <button onclick="press('9')">9</button>
-      <button class="operator" onclick="press('/')">÷</button>
-      
-      <button onclick="press('4')">4</button>
-      <button onclick="press('5')">5</button>
-      <button onclick="press('6')">6</button>
-      <button class="operator" onclick="press('*')">×</button>
-      
-      <button onclick="press('1')">1</button>
-      <button onclick="press('2')">2</button>
-      <button onclick="press('3')">3</button>
-      <button class="operator" onclick="press('-')">−</button>
-      
-      <button onclick="press('0')">0</button>
-      <button onclick="press('.')">.</button>
-      <button class="equal" onclick="calculate()">=</button>
-      <button class="operator" onclick="press('+')">+</button>
-      
-      <button class="clear" onclick="clearDisplay()">C</button>
-    </div>
-  </div>
 
-  <script>
-    let display = document.getElementById('display');
+<h1>South African University Timetable System</h1>
+<div class="container">
 
-    function press(value) {
-      display.value += value;
+  <h2>Customize Time Range (Each Class = 90 minutes)</h2>
+  <form id="timeRangeForm">
+    <label>Start Hour (e.g. 7): <input type="number" id="startHour" min="0" max="22" value="8" required></label>
+    <label>End Hour (e.g. 20): <input type="number" id="endHour" min="1" max="24" value="17" required></label>
+    <button type="submit">Update Timetable</button>
+  </form>
+
+  <h2>Select Modules to Add</h2>
+  <div id="modulesList"></div>
+
+  <h2>Your Timetable</h2>
+  <table id="timetable">
+    <thead>
+      <tr>
+        <th>Time / Day</th>
+        <th>Monday</th>
+        <th>Tuesday</th>
+        <th>Wednesday</th>
+        <th>Thursday</th>
+        <th>Friday</th>
+      </tr>
+    </thead>
+    <tbody id="timetableBody"></tbody>
+  </table>
+
+  <h2>Add Your Own Module</h2>
+  <form id="addModuleForm">
+    <label>Module Name: <input type="text" id="customModuleName" required></label>
+    <label>Day:
+      <select id="customModuleDay" required>
+        <option value="1">Monday</option>
+        <option value="2">Tuesday</option>
+        <option value="3">Wednesday</option>
+        <option value="4">Thursday</option>
+        <option value="5">Friday</option>
+      </select>
+    </label>
+    <label>Start Hour (e.g. 9 or 10.5 for 10:30): <input type="number" step="0.5" id="customModuleHour" min="0" max="23" required></label>
+    <label>Color:
+      <select id="customModuleColor" required>
+        <option value="green">Green</option>
+        <option value="yellow">Yellow</option>
+        <option value="blue">Blue</option>
+        <option value="grey">Grey</option>
+        <option value="red">Red</option>
+      </select>
+    </label>
+    <button type="submit">Add Module to Timetable</button>
+  </form>
+
+  <button id="reminderBtn">Set Reminder for Next Class</button>
+</div>
+
+<script>
+  const modules = [
+    { name: "CS101 - Intro to Computer Science", color: "black" },
+    { name: "ENG201 - Electrical Engineering Basics", color: "red" },
+    { name: "MED301 - Human Anatomy", color: "blue" },
+    { name: "IT105 - Networks", color: "orange" },
+    { name: "BSc201 - Chemistry", color: "green" },
+    { name: "HUM101 - Philosophy", color: "pink" },
+    { name: "EDU210 - Teaching Methods", color: "purple" },
+    { name: "AGRI150 - Soil Science", color: "yellow" },
+    { name: "MATH220 - Applied Mathematics", color: "grey" }
+  ];
+
+  const modulesListDiv = document.getElementById('modulesList');
+  const timetableBody = document.getElementById('timetableBody');
+
+  function renderTimetable(start = 8, end = 17) {
+    timetableBody.innerHTML = '';
+    for (let hour = start; hour <= end - 1; hour += 1.5) {
+      const endHour = hour + 1.5;
+      const row = document.createElement('tr');
+      const timeCell = document.createElement('td');
+      timeCell.textContent = `${formatTime(hour)} - ${formatTime(endHour)}`;
+      row.appendChild(timeCell);
+
+      for (let day = 1; day <= 5; day++) {
+        const cell = document.createElement('td');
+        cell.className = 'timetable-cell';
+        cell.setAttribute('data-day', day);
+        cell.setAttribute('data-hour', hour.toFixed(1));
+        row.appendChild(cell);
+      }
+      timetableBody.appendChild(row);
+    }
+  }
+
+  function formatTime(decimalHour) {
+    const hours = Math.floor(decimalHour);
+    const minutes = (decimalHour % 1 >= 0.5) ? "30" : "00";
+    return `${hours}:${minutes}`;
+  }
+
+  // Initial render
+  renderTimetable();
+
+  document.getElementById('timeRangeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const start = parseFloat(document.getElementById('startHour').value);
+    const end = parseFloat(document.getElementById('endHour').value);
+    if (start >= end || start < 0 || end > 24) {
+      alert('Invalid time range');
+      return;
+    }
+    renderTimetable(start, end);
+  });
+
+  modules.forEach(mod => {
+    const modDiv = document.createElement('div');
+    modDiv.className = 'module';
+    modDiv.style.backgroundColor = mod.color;
+    modDiv.textContent = mod.name;
+    modDiv.onclick = () => {
+      const day = prompt('Enter day number (1=Monday to 5=Friday)');
+      const hour = prompt('Enter start hour (e.g. 9 or 10.5 for 10:30)');
+      const cell = document.querySelector(`td[data-day="${day}"][data-hour="${parseFloat(hour).toFixed(1)}"]`);
+      if (cell && !cell.querySelector('.module-block')) {
+        addModuleBlock(cell, mod.name, mod.color);
+      } else {
+        alert('Time slot taken or invalid');
+      }
+    };
+    modulesListDiv.appendChild(modDiv);
+  });
+
+  function addModuleBlock(cell, name, color) {
+    const block = document.createElement('div');
+    block.className = 'module-block';
+    block.style.backgroundColor = color;
+    block.textContent = name;
+    cell.appendChild(block);
+  }
+
+  document.getElementById('addModuleForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('customModuleName').value.trim();
+    const day = document.getElementById('customModuleDay').value;
+    const hour = parseFloat(document.getElementById('customModuleHour').value).toFixed(1);
+    const color = document.getElementById('customModuleColor').value;
+    const cell = document.querySelector(`td[data-day="${day}"][data-hour="${hour}"]`);
+    if (cell && !cell.querySelector('.module-block')) {
+      addModuleBlock(cell, name, color);
+      e.target.reset();
+    } else {
+      alert('Time slot taken or invalid');
+    }
+  });
+
+  document.getElementById('reminderBtn').onclick = () => {
+    const now = new Date();
+    let currentDay = now.getDay(); // Sunday = 0
+    currentDay = (currentDay === 0 || currentDay > 5) ? 1 : currentDay;
+
+    const scheduled = [];
+    document.querySelectorAll('.module-block').forEach(block => {
+      const cell = block.parentElement;
+      const day = parseInt(cell.getAttribute('data-day'));
+      const hour = parseFloat(cell.getAttribute('data-hour'));
+      scheduled.push({ day, hour, name: block.textContent });
+    });
+
+    if (scheduled.length === 0) {
+      alert('No classes scheduled.');
+      return;
     }
 
-    function calculate() {
-      try {
-        display.value = eval(display.value);
-      } catch {
-        display.value = "Error";
+    scheduled.sort((a, b) => (a.day - b.day) || (a.hour - b.hour));
+
+    let nextClass = null;
+    for (const cls of scheduled) {
+      if (cls.day > currentDay || (cls.day === currentDay && cls.hour > now.getHours() + now.getMinutes() / 60)) {
+        nextClass = cls;
+        break;
       }
     }
 
-    function clearDisplay() {
-      display.value = '';
+    if (!nextClass) nextClass = scheduled[0];
+
+    const daysAhead = (nextClass.day + 7 - currentDay) % 7;
+    const reminderDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead, Math.floor(nextClass.hour), (nextClass.hour % 1 >= 0.5 ? 30 : 0));
+    const reminderTime = new Date(reminderDate.getTime() - 10 * 60 * 1000);
+    const msToReminder = reminderTime - now;
+
+    if (msToReminder <= 0) {
+      alert(`Reminder: "${nextClass.name}" starts soon!`);
+      return;
     }
-  </script>
+
+    alert(`Reminder set for "${nextClass.name}" at ${reminderDate.toLocaleString()} (10 minutes before)`);
+
+    setTimeout(() => {
+      alert(`Reminder: Your class "${nextClass.name}" starts in 10 minutes!`);
+    }, msToReminder);
+  };
+</script>
+
 </body>
 </html>
